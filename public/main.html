@@ -19,11 +19,32 @@
       margin: 15px auto;
       font-size: 16px;
       cursor: pointer;
+      transition: transform 0.1s ease; 
+    }
+    button:active {
+      transform: scale(0.95); 
+    }
+
+
+    .logout-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: red;
+      color: white;
+      font-size: 14px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      width: auto;
+      height: auto;
     }
   </style>
 </head>
 <body>
   <h1>主畫面</h1>
+
+  <button class="logout-btn" onclick="logout()">登出</button>
 
   <button onclick="goTo('view.html')">檢視平台資金</button>
   <button onclick="goTo('balance.html')">加值／提款</button>
@@ -33,6 +54,14 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const user = params.get('user');
+
+    function logout() {
+
+      const confirmLogout = confirm('確定要登出嗎？');
+      if (confirmLogout) {
+        window.location.href = '/login.html';
+      }
+    }
 
     function goTo(page) {
       if (!user) {
