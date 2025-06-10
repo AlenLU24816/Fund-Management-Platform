@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>上架商品</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1, h2 {
+      margin-bottom: 15px;
+    }
+    label, input, button, textarea {
+      margin: 6px 0;
+      display: block;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 6px;
+    }
+    #message {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .card {
+      background-color: #fff;
+      padding: 20px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.05);
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>上架商品</h1>
+    <label>商品名稱：<input type="text" id="itemName" /></label>
+    <label>價格：<input type="number" id="itemPrice" /></label>
+    <label>數量：<input type="number" id="itemQuantity" /></label>
+    <label>備註：<input type="text" id="itemNote" /></label>
+    <button id="sellBtn">確認上架</button>
+    <div id="message"></div>
+  </div>
+
+  <div class="card">
+    <h2>目前已上架商品</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>商品名稱</th>
+          <th>價格</th>
+          <th>數量</th>
+          <th>備註</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="itemsTableBody">
+        <tr><td colspan="5">載入中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const user = params.get('user');
+    const message = document.getElementById('message');
+
+    if (!user) {
+      alert('使用者未登入');
+      location.href = '/login.html';
+    }
+
+    async function loadItems() {
+      try {
+        const res = await fetch(`/api/items?seller=${encodeURIComponent(user)}`);
+        const items = await res.json();
+        const tbody = document.getElementById('itemsTableBody');
+        tbody.innerHTML = '';
+
+        if (items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">尚無上架商品</td></tr>';
+        } else {
+          items.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${item.name}</td>
+              <td>$${parseFloat(item.price).toFixed(2)}</td>
+              <td>${item.quantity}</td>
+              <td>${item.note || ''}</td>
+              <td><button onclick="deleteItem(${item.id})">刪除</button></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (err) {
+        console.error('讀取商品失敗：', err);
+        document.getElementById('itemsTableBody').innerHTML = '<tr><td colspan="5">載入錯誤</td></tr>';
+      }
+    }
+
+    async function deleteItem(id) {
+      if (!confirm('確定要刪除此商品？')) return;
+      try {
+        const res = await fetch(`/api/item/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        if (res.ok) {
+          message.textContent = '✅ 商品已刪除';
+          message.style.color = 'green';
+          loadItems();
+        } else {
+          message.textContent = result.error || '❌ 刪除失敗';
+          message.style.color = 'red';
+        }
+      } catch (err) {
+        console.error('刪除錯誤：', err);
+        message.textContent = '❌ 伺服器錯誤';
+        message.style.color = 'red';
+      }
+    }
+
+    document.getElementById('sellBtn').addEventListener('click', async () => {
+      const name = document.getElementById('itemName').value.trim();
+      const price = parseFloat(document.getElementById('itemPrice').value);
+      const quantity = parseInt(document.getElementById('itemQuantity').value);
+      const note = document.getElementById('itemNote').value.trim();
+
+      if (!name || isNaN(price) || price <= 0 || isNaN(quantity) || quantity <= 0) {
+        message.textContent = '請填寫有效的商品名稱、價格與數量';
+        message.style.color = 'red';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/sell', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ seller: user, name, price, quantity, note })
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          message.textContent = '✅ 商品已成功上架！';
+          message.style.color = 'green';
+          loadItems();
+        } else {
+          message.textContent = result.error || '❌ 上架失敗';
+          message.style.color = 'red';
+        }
+      } catch (err) {
+        console.error('上架錯誤：', err);
+        message.textContent = '❌ 伺服器錯誤，請稍後再試';
+        message.style.color = 'red';
+      }
+    });
+
+    loadItems();
+  </script>
+</body>
+</html>

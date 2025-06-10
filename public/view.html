@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>平台金額總覽</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    #total {
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    #error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>使用者持有金額</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>帳號</th>
+        <th>暱稱</th>
+        <th>金額</th>
+      </tr>
+    </thead>
+    <tbody id="userTableBody">
+      <!-- 資料由 JS 插入 -->
+    </tbody>
+  </table>
+
+  <div id="total">平台總金額：$0</div>
+  <div id="error"></div>
+
+  <script>
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+        const tbody = document.getElementById('userTableBody');
+        let total = 0;
+
+        data.forEach(user => {
+          const tr = document.createElement('tr');
+
+          const tdAccount = document.createElement('td');
+          tdAccount.textContent = user.username;
+
+          const tdNickname = document.createElement('td');
+          tdNickname.textContent = user.nickname;
+
+          const tdBalance = document.createElement('td');
+          tdBalance.textContent = '$' + parseFloat(user.balance).toFixed(2);
+          total += parseFloat(user.balance);
+
+          tr.appendChild(tdAccount);
+          tr.appendChild(tdNickname);
+          tr.appendChild(tdBalance);
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById('total').textContent = `平台總金額：$${total.toFixed(2)}`;
+      })
+      .catch(err => {
+        console.error('錯誤:', err);
+        document.getElementById('error').textContent = '資料讀取失敗';
+      });
+  </script>
+</body>
+</html>

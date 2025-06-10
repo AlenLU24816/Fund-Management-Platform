@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>主畫面選單</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 50px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 40px;
+    }
+    button {
+      display: block;
+      width: 250px;
+      padding: 15px;
+      margin: 15px auto;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>主畫面</h1>
+
+  <button onclick="goTo('view.html')">檢視平台資金</button>
+  <button onclick="goTo('balance.html')">加值／提款</button>
+  <button onclick="goTo('sell.html')">上架商品</button>
+  <button onclick="goTo('buy.html')">購買商品</button>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const user = params.get('user');
+
+    function goTo(page) {
+      if (!user) {
+        alert('使用者未登入，請重新登入。');
+        return;
+      }
+      window.location.href = `${page}?user=${encodeURIComponent(user)}`;
+    }
+  </script>
+</body>
+</html>

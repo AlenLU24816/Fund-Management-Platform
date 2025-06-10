@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>加值／提款</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 30px; }
+    h1 { margin-bottom: 20px; }
+    #balanceDisplay { font-size: 1.2em; margin-bottom: 20px; }
+    input, button { margin: 5px; padding: 5px; }
+    #message { font-weight: bold; color: red; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>我的餘額</h1>
+  <div id="balanceDisplay">載入中...</div>
+
+  <input type="number" id="amountInput" placeholder="請輸入金額" />
+  <button id="addBtn">加值</button>
+  <button id="withdrawBtn">提款</button>
+
+  <div id="message"></div>
+
+  <script src="balance.js"></script>
+</body>
+</html>

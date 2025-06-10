@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>購買商品</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; }
+    h1, h2 { margin-bottom: 15px; }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 1px 1px 5px rgba(0,0,0,0.05);
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    .btn-buy {
+      padding: 5px 10px;
+      background-color: green;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-buy:disabled {
+      background-color: gray;
+      cursor: not-allowed;
+    }
+    #message {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>購買商品</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>商品名稱</th>
+        <th>價格</th>
+        <th>數量</th>
+        <th>備註</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="itemsTableBody">
+      <tr><td colspan="5">載入中...</td></tr>
+    </tbody>
+  </table>
+  <div id="message"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const user = params.get('user');
+    const message = document.getElementById('message');
+
+    if (!user) {
+      alert('使用者未登入');
+    }
+
+    async function loadItems() {
+      try {
+        const res = await fetch('/api/buyable');
+        const items = await res.json();
+        const tbody = document.getElementById('itemsTableBody');
+        tbody.innerHTML = '';
+
+        if (items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">目前無可購買商品</td></tr>';
+        } else {
+          items.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${item.name}</td>
+              <td>$${parseFloat(item.price).toFixed(2)}</td>
+              <td>${item.quantity}</td>
+              <td>${item.note || ''}</td>
+              <td><button class="btn-buy" onclick="buyItem(${item.id}, ${item.price})">購買</button></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (err) {
+        console.error('讀取商品失敗', err);
+        document.getElementById('itemsTableBody').innerHTML = '<tr><td colspan="5">載入錯誤</td></tr>';
+      }
+    }
+
+    async function buyItem(itemId, price) {
+      try {
+        const res = await fetch('/api/buy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ buyer: user, itemId, price })
+        });
+
+        const result = await res.json();
+        if (res.ok) {
+          message.textContent = '✅ 購買成功！';
+          message.style.color = 'green';
+          loadItems();
+        } else {
+          message.textContent = result.error || '❌ 購買失敗';
+          message.style.color = 'red';
+        }
+      } catch (err) {
+        console.error('購買錯誤：', err);
+        message.textContent = '❌ 伺服器錯誤，請稍後再試';
+        message.style.color = 'red';
+      }
+    }
+
+    loadItems();
+  </script>
+</body>
+</html>
